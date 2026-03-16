@@ -1,0 +1,145 @@
+/*-- scss:defaults --*/
+
+$body-bg: #f4e3d8;
+$body-color: #2a2d3a;
+$presentation-heading-color: #25324a;
+$presentation-font-size-root: 34px;
+$font-family-sans-serif: "Avenir Next", "Segoe UI", sans-serif;
+$presentation-heading-font: "Optima", "Avenir Next", sans-serif;
+$presentation-heading-font-weight: 600;
+$link-color: #365d86;
+$selection-bg: rgba(102, 140, 178, 0.2);
+
+/*-- scss:rules --*/
+
+:root {
+  --dawn-panel: rgba(255, 250, 246, 0.84);
+  --dawn-panel-border: rgba(255, 255, 255, 0.55);
+  --dawn-panel-shadow: rgba(61, 56, 66, 0.12);
+  --dawn-text: #283247;
+  --dawn-muted: #566176;
+}
+
+html,
+body,
+.reveal,
+.reveal-viewport {
+  background:
+    radial-gradient(circle at top, rgba(255, 245, 235, 0.6), transparent 34%),
+    linear-gradient(180deg, #f8d8c5 0%, #f3dccd 28%, #d9dee9 63%, #ced7e5 100%);
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 15% 18%, rgba(255, 255, 255, 0.26), transparent 24%),
+    radial-gradient(circle at 85% 14%, rgba(253, 228, 203, 0.2), transparent 22%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.08), rgba(255, 255, 255, 0));
+  pointer-events: none;
+  z-index: 0;
+}
+
+.reveal .backgrounds,
+.reveal .slide-background {
+  background: transparent !important;
+}
+
+.reveal {
+  position: relative;
+  z-index: 2;
+}
+
+.reveal .slides {
+  text-align: left;
+  z-index: 2;
+}
+
+.reveal .slides section {
+  box-sizing: border-box;
+  min-height: 100%;
+  padding: 1.2rem 2rem;
+}
+
+.reveal .slides section > :not(section):not(.notes):not(script) {
+  position: relative;
+  z-index: 2;
+}
+
+.reveal h1,
+.reveal h2,
+.reveal h3 {
+  letter-spacing: 0.01em;
+  text-transform: none;
+}
+
+.reveal h1 {
+  font-size: 2.1em;
+  margin-bottom: 0.25em;
+}
+
+.reveal h2 {
+  font-size: 1.2em;
+  color: var(--dawn-muted);
+  margin-bottom: 0.7em;
+}
+
+.reveal p,
+.reveal li {
+  color: var(--dawn-text);
+}
+
+.reveal ul,
+.reveal ol {
+  display: block;
+  margin-left: 1.1em;
+}
+
+.reveal pre {
+  width: 100%;
+  box-shadow: none;
+  font-size: 0.78em;
+}
+
+.reveal pre code {
+  border-radius: 18px;
+  padding: 1em 1.15em;
+  background: rgba(239, 242, 247, 0.85);
+  color: #243040;
+}
+
+.reveal code {
+  color: #324869;
+}
+
+.reveal .progress {
+  color: rgba(93, 125, 157, 0.45);
+  height: 6px;
+}
+
+.reveal .slide-number {
+  right: 24px;
+  bottom: 18px;
+  padding: 0.25rem 0.55rem;
+  border-radius: 999px;
+  background: rgba(255, 250, 246, 0.7);
+  color: #516072;
+  font-size: 0.38em;
+}
+
+.dawn-flock-canvas {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.92;
+}
+
+@media (max-width: 900px) {
+  .reveal h1 {
+    font-size: 1.65em;
+  }
+}

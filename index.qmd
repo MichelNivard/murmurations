@@ -1,0 +1,111 @@
+---
+title: "Murmurations"
+subtitle: "A Quarto + Reveal.js slide template with a simulated background flock"
+author: "Michel Nivard"
+format: revealjs
+---
+
+## What This Project Is
+
+This repository is a working Quarto presentation that uses the `revealjs` format and adds a custom animated background.
+
+- Quarto provides the authoring workflow
+- Reveal.js provides the HTML slide engine
+- `theme.scss` sets the visual style
+- `flock.js` runs the murmuration simulation in the background
+
+---
+
+## Why Quarto And Reveal.js
+
+Quarto lets you write slides in Markdown and render them to a Reveal.js presentation.
+
+- Slides are created with Markdown headings
+- Quarto renders those headings into Reveal.js sections
+- Reveal.js handles navigation, transitions, speaker view, and browser presentation
+- The official Quarto Reveal.js guide is at <https://quarto.org/docs/presentations/revealjs/>
+
+For beginners, the main thing to know is that you edit `index.qmd`, run `quarto render`, and Quarto generates a complete HTML slide deck for you.
+
+---
+
+## Visual Design
+
+The background is intentionally atmospheric rather than literal.
+
+- A dawn-colored gradient sets the sky
+- Three faint low-poly hill bands give the scene depth
+- The flock is rendered as many small dark birds with perspective-based sizing
+- Birds prefer the right side so they interfere with slide text less often
+
+---
+
+## How The Simulation Works
+
+The flock is not just random motion. It is a lightweight 3D boid model tuned to feel like a murmuration.
+
+At each animation frame:
+
+1. Each bird looks at nearby birds in a local spatial grid.
+2. It reacts to a fixed number of nearest neighbors rather than every bird on screen.
+3. Neighbors to the side count more strongly than neighbors behind, which makes the motion feel more like a real flock.
+4. The bird updates `x`, `y`, and `z`, so depth is part of the flock logic rather than only a size trick.
+5. Depth is projected back to the screen so birds that are closer look larger and shift position slightly.
+
+---
+
+## What Happens On Slide Change
+
+Slide changes trigger a disturbance wave rather than a global explosion.
+
+- A local wave is injected into the flock
+- Birds near the wave turn first
+- The turning impulse propagates through the flock over time
+- This makes transitions feel more like a startle spreading through a group
+
+---
+
+## The Main Tuning File
+
+Most behavior lives in `flock.js`.
+
+```js
+const CONFIG = {
+  boidCount: 750,
+  topologicalNeighbors: 9,
+  separationRadius: 18,
+  rightAffinityStrength: 0.11,
+  waveSpeed: 13,
+  waveWidth: 95
+};
+```
+
+If you want to change the feel of the simulation, this is the first file to edit.
+
+---
+
+## What To Tweak
+
+The easiest controls for experimentation are:
+
+- `boidCount`: total number of birds
+- `baseSpeed`, `minSpeed`, `maxSpeed`: how quickly the flock moves
+- `separationRadius`: how tightly birds pack together
+- `rightAffinityStrength`: how strongly the flock prefers the right side
+- `waveSpeed`, `waveWidth`, `waveStrength`: how slide-change disturbances propagate
+- `minDrawSize`, `maxDrawSize`: how strongly depth affects bird size
+
+Use `theme.scss` when you want to change color, typography, spacing, or the overall atmosphere rather than the flock mechanics.
+
+---
+
+## Use This Template
+
+To make your own deck:
+
+1. Edit `index.qmd`
+2. Run `quarto preview` while writing
+3. Run `quarto render` when you want the final HTML output
+4. Commit the rendered `docs/` folder if you want to publish with GitHub Pages
+
+This demo is designed to be copied and modified rather than treated as a closed theme.

@@ -1,0 +1,26 @@
+project:
+  title: "Dawn Murmuration RevealJS Template"
+  output-dir: docs
+
+resources:
+  - flock.js
+
+format:
+  revealjs:
+    theme: [default, theme.scss]
+    slide-number: true
+    transition: fade
+    background-transition: none
+    width: 1600
+    height: 900
+    margin: 0.04
+    controls: true
+    progress: true
+    center: false
+    smaller: false
+    chalkboard: false
+    preview-links: auto
+    css: []
+    include-in-header:
+      text: |
+        <script src="flock.js" defer></script>
