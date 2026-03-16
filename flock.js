@@ -79,8 +79,8 @@
     maxWaves: 3,
     balloonBurnIntervalMinMs: 1800,
     balloonBurnIntervalMaxMs: 3000,
-    balloonBurnDurationMinMs: 360,
-    balloonBurnDurationMaxMs: 680
+    balloonBurnDurationMinMs: 720,
+    balloonBurnDurationMaxMs: 1360
   };
 
   const BRISTOL_BALLOONS = [
@@ -371,8 +371,8 @@
           y + ry * 0.58,
           rx * 0.9
         );
-        glow.addColorStop(0, `rgba(255, 235, 156, ${0.3 * burnPhase})`);
-        glow.addColorStop(0.55, `rgba(255, 170, 102, ${0.14 * burnPhase})`);
+        glow.addColorStop(0, `rgba(255, 235, 156, ${0.375 * burnPhase})`);
+        glow.addColorStop(0.55, `rgba(255, 170, 102, ${0.175 * burnPhase})`);
         glow.addColorStop(1, "rgba(255, 154, 98, 0)");
         ctx.fillStyle = glow;
         ctx.beginPath();
@@ -417,15 +417,15 @@
           flameBaseY + ry * 0.24,
           rx * 0.42
         );
-        burnerGlow.addColorStop(0, `rgba(255, 238, 166, ${0.24 * burnPhase})`);
-        burnerGlow.addColorStop(0.45, `rgba(255, 178, 74, ${0.16 * burnPhase})`);
+        burnerGlow.addColorStop(0, `rgba(255, 238, 166, ${0.3 * burnPhase})`);
+        burnerGlow.addColorStop(0.45, `rgba(255, 178, 74, ${0.2 * burnPhase})`);
         burnerGlow.addColorStop(1, "rgba(255, 178, 74, 0)");
         ctx.fillStyle = burnerGlow;
         ctx.beginPath();
         ctx.ellipse(x, flameBaseY + ry * 0.18, rx * 0.44, ry * 0.32, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        ctx.fillStyle = `rgba(255, 122, 54, ${0.28 * burnPhase})`;
+        ctx.fillStyle = `rgba(255, 122, 54, ${0.35 * burnPhase})`;
         ctx.beginPath();
         ctx.moveTo(x - rx * 0.14, flameBaseY);
         ctx.lineTo(x, flameBaseY + ry * 0.64);
@@ -433,7 +433,7 @@
         ctx.closePath();
         ctx.fill();
 
-        ctx.fillStyle = `rgba(255, 236, 112, ${0.46 * burnPhase})`;
+        ctx.fillStyle = `rgba(255, 236, 112, ${0.575 * burnPhase})`;
         ctx.beginPath();
         ctx.moveTo(x - rx * 0.08, flameBaseY + ry * 0.02);
         ctx.lineTo(x, flameBaseY + ry * 0.42);
