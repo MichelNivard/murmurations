@@ -182,7 +182,7 @@
     };
   }
 
-  function drawPolygonBands(ctx, width, height) {
+  function drawPolygonBands(ctx, width, height, startIndex = 0, endIndex = Infinity) {
     const horizon = height * 0.66;
     const bands = [
       {
@@ -230,7 +230,7 @@
       }
     ];
 
-    bands.forEach((band) => {
+    bands.slice(startIndex, endIndex).forEach((band) => {
       ctx.beginPath();
       band.points.forEach(([x, y], index) => {
         if (index === 0) ctx.moveTo(x, y);
@@ -262,85 +262,180 @@
     };
   }
 
-  function drawCliftonBridge(ctx, width, height) {
+  function quadraticPoint(p0, p1, p2, t) {
+    const mt = 1 - t;
+    return {
+      x: mt * mt * p0.x + 2 * mt * t * p1.x + t * t * p2.x,
+      y: mt * mt * p0.y + 2 * mt * t * p1.y + t * t * p2.y
+    };
+  }
+
+  function drawCliftonBridge(ctx, width, height, phase = "all") {
     const horizon = height * 0.66;
-    const leftTower = {
-      x: width * 0.094,
-      topY: horizon + 56,
-      baseY: horizon + 118
+    const nearTower = {
+      x: width * 0.112,
+      topY: horizon + 46,
+      baseY: horizon + 131,
+      topWidth: width * 0.008,
+      baseWidth: width * 0.0135,
+      capWidth: width * 0.019,
+      capHeight: height * 0.011
     };
-    const rightTower = {
-      x: width * 0.198,
-      topY: horizon + 28,
-      baseY: horizon + 90
+    const farTower = {
+      x: width * 0.268,
+      topY: horizon + 26,
+      baseY: horizon + 88,
+      topWidth: width * 0.0058,
+      baseWidth: width * 0.0094,
+      capWidth: width * 0.013,
+      capHeight: height * 0.009
     };
-    const leftAnchor = { x: width * 0.046, y: horizon + 126 };
-    const rightAnchor = { x: width * 0.258, y: horizon + 58 };
-    const leftTowerTop = { x: leftTower.x, y: leftTower.topY };
-    const rightTowerTop = { x: rightTower.x, y: rightTower.topY };
-    const deckStart = { x: width * 0.064, y: horizon + 104 };
-    const deckEnd = { x: width * 0.228, y: horizon + 82 };
-    const deckLowerStart = { x: deckStart.x, y: deckStart.y + 4 };
-    const deckLowerEnd = { x: deckEnd.x, y: deckEnd.y + 4 };
-    const mainCable = [
-      leftTowerTop,
-      { x: lerp(leftTower.x, rightTower.x, 0.22), y: horizon + 74 },
-      { x: lerp(leftTower.x, rightTower.x, 0.5), y: horizon + 84 },
-      { x: lerp(leftTower.x, rightTower.x, 0.78), y: horizon + 60 },
-      rightTowerTop
+    const leftAnchor = { x: width * 0.056, y: horizon + 108 };
+    const rightAnchor = { x: width * 0.297, y: horizon + 58 };
+    const deckY = horizon + 92;
+    const deckP0 = { x: nearTower.x + width * 0.004, y: deckY };
+    const deckP2 = { x: farTower.x - width * 0.004, y: deckY };
+    const deckLowerP0 = { x: deckP0.x, y: deckP0.y + 4 };
+    const deckLowerP2 = { x: deckP2.x, y: deckP2.y + 4 };
+    const cablePoints = [
+      { x: nearTower.x, y: nearTower.topY + 2 },
+      { x: lerp(nearTower.x, farTower.x, 0.22), y: deckY - 8 },
+      { x: lerp(nearTower.x, farTower.x, 0.5), y: deckY + 1 },
+      { x: lerp(nearTower.x, farTower.x, 0.78), y: deckY - 10 },
+      { x: farTower.x, y: farTower.topY + 2 }
     ];
-    const towerWidth = Math.max(3, width * 0.0026);
 
     ctx.save();
     ctx.lineCap = "round";
     ctx.lineJoin = "round";
 
-    ctx.fillStyle = "rgba(116, 128, 146, 0.15)";
-    ctx.fillRect(leftTower.x - towerWidth / 2, leftTower.topY, towerWidth, leftTower.baseY - leftTower.topY);
-    ctx.fillRect(
-      rightTower.x - towerWidth / 2,
-      rightTower.topY,
-      towerWidth,
-      rightTower.baseY - rightTower.topY
-    );
+    const drawFarSupport = phase === "all" || phase === "far-support";
+    const drawMainSpan = phase === "all" || phase === "main-span";
 
-    ctx.strokeStyle = "rgba(78, 90, 110, 0.11)";
-    ctx.lineWidth = 1.05;
-    drawPath(ctx, [leftAnchor, leftTowerTop, ...mainCable.slice(1, -1), rightTowerTop, rightAnchor]);
-    ctx.stroke();
+    function drawTower(tower, fillAlpha, slotAlpha) {
+      const shaftTopY = tower.topY + tower.capHeight;
+      drawPath(
+        ctx,
+        [
+          { x: tower.x - tower.baseWidth / 2, y: tower.baseY },
+          { x: tower.x - tower.topWidth / 2, y: shaftTopY },
+          { x: tower.x + tower.topWidth / 2, y: shaftTopY },
+          { x: tower.x + tower.baseWidth / 2, y: tower.baseY }
+        ],
+        true
+      );
+      ctx.fillStyle = `rgba(116, 103, 92, ${fillAlpha})`;
+      ctx.fill();
 
-    ctx.strokeStyle = "rgba(230, 236, 244, 0.035)";
-    ctx.lineWidth = 0.45;
-    drawPath(ctx, [leftAnchor, leftTowerTop, ...mainCable.slice(1, -1), rightTowerTop, rightAnchor]);
-    ctx.stroke();
+      ctx.fillStyle = `rgba(214, 198, 170, ${fillAlpha * 0.7})`;
+      ctx.fillRect(
+        tower.x - tower.capWidth / 2,
+        tower.topY,
+        tower.capWidth,
+        tower.capHeight
+      );
 
-    ctx.strokeStyle = "rgba(86, 97, 118, 0.18)";
-    ctx.lineWidth = 1.9;
-    drawPath(ctx, [deckStart, deckEnd]);
-    ctx.stroke();
+      ctx.fillStyle = `rgba(64, 58, 52, ${slotAlpha})`;
+      ctx.beginPath();
+      ctx.moveTo(tower.x - tower.topWidth * 0.15, shaftTopY + tower.capHeight * 0.8);
+      ctx.lineTo(tower.x - tower.topWidth * 0.28, tower.baseY - tower.capHeight * 1.1);
+      ctx.lineTo(tower.x + tower.topWidth * 0.28, tower.baseY - tower.capHeight * 1.1);
+      ctx.lineTo(tower.x + tower.topWidth * 0.15, shaftTopY + tower.capHeight * 0.8);
+      ctx.closePath();
+      ctx.fill();
+    }
 
-    ctx.strokeStyle = "rgba(220, 228, 240, 0.045)";
-    ctx.lineWidth = 0.65;
-    drawPath(ctx, [deckStart, deckEnd]);
-    ctx.stroke();
+    if (drawFarSupport) {
+      drawTower(farTower, 0.13, 0.06);
 
-    ctx.strokeStyle = "rgba(97, 108, 128, 0.1)";
-    ctx.lineWidth = 1.15;
-    drawPath(ctx, [deckLowerStart, deckLowerEnd]);
-    ctx.stroke();
+      ctx.fillStyle = "rgba(103, 99, 96, 0.082)";
+      drawPath(
+        ctx,
+        [
+          { x: farTower.x - farTower.baseWidth * 0.72, y: farTower.baseY - 1 },
+          { x: farTower.x + farTower.baseWidth * 0.58, y: farTower.baseY - 1 },
+          { x: farTower.x + width * 0.012, y: horizon + 123 },
+          { x: farTower.x - width * 0.014, y: horizon + 119 }
+        ],
+        true
+      );
+      ctx.fill();
 
-    for (let i = 0; i < 11; i += 1) {
-      const t = (i + 0.5) / 11;
-      const top = samplePolyline(mainCable, t);
-      const deck = {
-        x: lerp(deckStart.x, deckEnd.x, t),
-        y: lerp(deckStart.y, deckEnd.y, t)
-      };
-
-      ctx.strokeStyle = "rgba(82, 94, 116, 0.07)";
-      ctx.lineWidth = 0.55;
-      drawPath(ctx, [top, deck]);
+      ctx.strokeStyle = "rgba(120, 122, 126, 0.08)";
+      ctx.lineWidth = 0.7;
+      drawPath(ctx, [cablePoints[cablePoints.length - 1], rightAnchor]);
       ctx.stroke();
+    }
+
+    if (drawMainSpan) {
+      drawTower(nearTower, 0.17, 0.08);
+
+      ctx.fillStyle = "rgba(103, 99, 96, 0.1)";
+      drawPath(
+        ctx,
+        [
+          { x: nearTower.x - nearTower.baseWidth * 0.8, y: nearTower.baseY - 2 },
+          { x: nearTower.x + nearTower.baseWidth * 0.62, y: nearTower.baseY - 2 },
+          { x: nearTower.x + width * 0.016, y: horizon + 152 },
+          { x: nearTower.x - width * 0.024, y: horizon + 147 }
+        ],
+        true
+      );
+      ctx.fill();
+
+      ctx.strokeStyle = "rgba(120, 122, 126, 0.08)";
+      ctx.lineWidth = 0.7;
+      drawPath(ctx, [leftAnchor, cablePoints[0]]);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(98, 104, 114, 0.11)";
+      ctx.lineWidth = 1.2;
+      drawPath(ctx, cablePoints);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(236, 238, 240, 0.045)";
+      ctx.lineWidth = 0.45;
+      drawPath(
+        ctx,
+        cablePoints.map((point) => ({
+          x: point.x,
+          y: point.y + 0.6
+        }))
+      );
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(89, 95, 104, 0.18)";
+      ctx.lineWidth = 2.05;
+      drawPath(ctx, [deckP0, deckP2]);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(230, 232, 236, 0.055)";
+      ctx.lineWidth = 0.6;
+      drawPath(ctx, [
+        { x: deckP0.x, y: deckP0.y + 0.5 },
+        { x: deckP2.x, y: deckP2.y + 0.5 }
+      ]);
+      ctx.stroke();
+
+      ctx.strokeStyle = "rgba(82, 88, 98, 0.11)";
+      ctx.lineWidth = 1.15;
+      drawPath(ctx, [deckLowerP0, deckLowerP2]);
+      ctx.stroke();
+
+      for (let i = 0; i < 17; i += 1) {
+        const t = (i + 0.45) / 17;
+        const cable = samplePolyline(cablePoints, t);
+        const deck = {
+          x: lerp(deckP0.x, deckP2.x, t),
+          y: deckY
+        };
+        const hangerAlpha = t < 0.16 || t > 0.84 ? 0.045 : 0.07;
+
+        ctx.strokeStyle = `rgba(112, 118, 126, ${hangerAlpha})`;
+        ctx.lineWidth = 0.55;
+        drawPath(ctx, [cable, deck]);
+        ctx.stroke();
+      }
     }
 
     ctx.restore();
@@ -883,7 +978,19 @@
       updateBalloonPulse(performance.now());
 
       ctx.clearRect(0, 0, state.width, state.height);
-      drawPolygonBands(ctx, state.width, state.height);
+      drawPolygonBands(ctx, state.width, state.height, 0, 1);
+
+      if (CONFIG.cliftonBridge) {
+        drawCliftonBridge(ctx, state.width, state.height, "far-support");
+      }
+
+      drawPolygonBands(ctx, state.width, state.height, 1, 2);
+
+      if (CONFIG.cliftonBridge) {
+        drawCliftonBridge(ctx, state.width, state.height, "main-span");
+      }
+
+      drawPolygonBands(ctx, state.width, state.height, 2, 3);
 
       const gradient = ctx.createLinearGradient(0, 0, 0, state.height);
       gradient.addColorStop(0, "rgba(255, 246, 236, 0.15)");
@@ -893,10 +1000,6 @@
 
       if (CONFIG.balloonFestival) {
         drawBalloonFestival(ctx, state.width, state.height, state.balloonPulse);
-      }
-
-      if (CONFIG.cliftonBridge) {
-        drawCliftonBridge(ctx, state.width, state.height);
       }
 
       let liveWaveCount = 0;
