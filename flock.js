@@ -1,5 +1,24 @@
 (function () {
+  const scriptTag =
+    document.currentScript || document.querySelector('script[src$="flock.js"]');
+  const flagParams = new URLSearchParams(scriptTag?.dataset.flags || "");
+
+  function getFlag(name, fallback = false) {
+    const globalFlags = window.murmurationsFlags;
+    if (globalFlags && typeof globalFlags[name] === "boolean") {
+      return globalFlags[name];
+    }
+
+    const value = flagParams.get(name);
+    if (value === null) return fallback;
+    return value === "" || value === "true";
+  }
+
+  const bristolEnabled = getFlag("bristol", false);
   const CONFIG = {
+    bristol: bristolEnabled,
+    cliftonBridge: getFlag("cliftonBridge", bristolEnabled),
+    balloonFestival: getFlag("balloonFestival", bristolEnabled),
     boidCount: 500,
     baseSpeed: 0.54,
     minSpeed: 0.36,
@@ -57,8 +76,20 @@
     waveLifetime: 145,
     waveTurnStrength: 0.075,
     waveDepthStrength: 0.0026,
-    maxWaves: 3
+    maxWaves: 3,
+    balloonBurnIntervalMinMs: 1800,
+    balloonBurnIntervalMaxMs: 3000,
+    balloonBurnDurationMinMs: 360,
+    balloonBurnDurationMaxMs: 680
   };
+
+  const BRISTOL_BALLOONS = [
+    { x: 0.57, y: 0.633, size: 0.0074, alpha: 0.11, fill: "rgba(196, 167, 180, 0.95)" },
+    { x: 0.642, y: 0.618, size: 0.0114, alpha: 0.138, fill: "rgba(210, 190, 162, 0.95)" },
+    { x: 0.714, y: 0.64, size: 0.0064, alpha: 0.098, fill: "rgba(174, 186, 202, 0.95)" },
+    { x: 0.802, y: 0.611, size: 0.0096, alpha: 0.128, fill: "rgba(202, 177, 156, 0.95)" },
+    { x: 0.888, y: 0.628, size: 0.006, alpha: 0.094, fill: "rgba(188, 181, 202, 0.95)" }
+  ];
 
   function clamp(value, min, max) {
     return Math.max(min, Math.min(max, value));
@@ -66,6 +97,10 @@
 
   function rand(min, max) {
     return Math.random() * (max - min) + min;
+  }
+
+  function lerp(start, end, t) {
+    return start + (end - start) * t;
   }
 
   function createCanvas() {
@@ -207,6 +242,210 @@
     });
   }
 
+  function drawPath(ctx, points, close = false) {
+    ctx.beginPath();
+    points.forEach((point, index) => {
+      if (index === 0) ctx.moveTo(point.x, point.y);
+      else ctx.lineTo(point.x, point.y);
+    });
+    if (close) ctx.closePath();
+  }
+
+  function samplePolyline(points, t) {
+    const clamped = clamp(t, 0, 1);
+    const segmentFloat = clamped * (points.length - 1);
+    const segmentIndex = Math.min(points.length - 2, Math.floor(segmentFloat));
+    const localT = segmentFloat - segmentIndex;
+    return {
+      x: lerp(points[segmentIndex].x, points[segmentIndex + 1].x, localT),
+      y: lerp(points[segmentIndex].y, points[segmentIndex + 1].y, localT)
+    };
+  }
+
+  function drawCliftonBridge(ctx, width, height) {
+    const horizon = height * 0.66;
+    const leftTower = {
+      x: width * 0.094,
+      topY: horizon + 56,
+      baseY: horizon + 118
+    };
+    const rightTower = {
+      x: width * 0.198,
+      topY: horizon + 28,
+      baseY: horizon + 90
+    };
+    const leftAnchor = { x: width * 0.046, y: horizon + 126 };
+    const rightAnchor = { x: width * 0.258, y: horizon + 58 };
+    const leftTowerTop = { x: leftTower.x, y: leftTower.topY };
+    const rightTowerTop = { x: rightTower.x, y: rightTower.topY };
+    const deckStart = { x: width * 0.064, y: horizon + 104 };
+    const deckEnd = { x: width * 0.228, y: horizon + 82 };
+    const deckLowerStart = { x: deckStart.x, y: deckStart.y + 4 };
+    const deckLowerEnd = { x: deckEnd.x, y: deckEnd.y + 4 };
+    const mainCable = [
+      leftTowerTop,
+      { x: lerp(leftTower.x, rightTower.x, 0.22), y: horizon + 74 },
+      { x: lerp(leftTower.x, rightTower.x, 0.5), y: horizon + 84 },
+      { x: lerp(leftTower.x, rightTower.x, 0.78), y: horizon + 60 },
+      rightTowerTop
+    ];
+    const towerWidth = Math.max(3, width * 0.0026);
+
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    ctx.fillStyle = "rgba(116, 128, 146, 0.15)";
+    ctx.fillRect(leftTower.x - towerWidth / 2, leftTower.topY, towerWidth, leftTower.baseY - leftTower.topY);
+    ctx.fillRect(
+      rightTower.x - towerWidth / 2,
+      rightTower.topY,
+      towerWidth,
+      rightTower.baseY - rightTower.topY
+    );
+
+    ctx.strokeStyle = "rgba(78, 90, 110, 0.11)";
+    ctx.lineWidth = 1.05;
+    drawPath(ctx, [leftAnchor, leftTowerTop, ...mainCable.slice(1, -1), rightTowerTop, rightAnchor]);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(230, 236, 244, 0.035)";
+    ctx.lineWidth = 0.45;
+    drawPath(ctx, [leftAnchor, leftTowerTop, ...mainCable.slice(1, -1), rightTowerTop, rightAnchor]);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(86, 97, 118, 0.18)";
+    ctx.lineWidth = 1.9;
+    drawPath(ctx, [deckStart, deckEnd]);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(220, 228, 240, 0.045)";
+    ctx.lineWidth = 0.65;
+    drawPath(ctx, [deckStart, deckEnd]);
+    ctx.stroke();
+
+    ctx.strokeStyle = "rgba(97, 108, 128, 0.1)";
+    ctx.lineWidth = 1.15;
+    drawPath(ctx, [deckLowerStart, deckLowerEnd]);
+    ctx.stroke();
+
+    for (let i = 0; i < 11; i += 1) {
+      const t = (i + 0.5) / 11;
+      const top = samplePolyline(mainCable, t);
+      const deck = {
+        x: lerp(deckStart.x, deckEnd.x, t),
+        y: lerp(deckStart.y, deckEnd.y, t)
+      };
+
+      ctx.strokeStyle = "rgba(82, 94, 116, 0.07)";
+      ctx.lineWidth = 0.55;
+      drawPath(ctx, [top, deck]);
+      ctx.stroke();
+    }
+
+    ctx.restore();
+  }
+
+  function drawBalloonFestival(ctx, width, height, balloonPulse) {
+    ctx.save();
+    ctx.lineCap = "round";
+    ctx.lineJoin = "round";
+
+    BRISTOL_BALLOONS.forEach((balloon, index) => {
+      const x = balloon.x * width;
+      const y = balloon.y * height;
+      const rx = balloon.size * width;
+      const ry = rx * 1.22;
+      const isActive = balloonPulse.active && balloonPulse.index === index;
+      const burnPhase = isActive
+        ? Math.sin((balloonPulse.progress || 0) * Math.PI)
+        : 0;
+      const balloonAlpha = balloon.alpha + burnPhase * 0.035;
+
+      if (burnPhase > 0.001) {
+        const glow = ctx.createRadialGradient(
+          x,
+          y + ry * 0.48,
+          rx * 0.18,
+          x,
+          y + ry * 0.58,
+          rx * 0.9
+        );
+        glow.addColorStop(0, `rgba(255, 235, 156, ${0.3 * burnPhase})`);
+        glow.addColorStop(0.55, `rgba(255, 170, 102, ${0.14 * burnPhase})`);
+        glow.addColorStop(1, "rgba(255, 154, 98, 0)");
+        ctx.fillStyle = glow;
+        ctx.beginPath();
+        ctx.ellipse(x, y + ry * 0.12, rx * 0.9, ry * 0.9, 0, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      ctx.fillStyle = balloon.fill.replace("0.95", `${balloonAlpha}`);
+      ctx.beginPath();
+      ctx.ellipse(x, y, rx, ry, 0, 0, Math.PI * 2);
+      ctx.fill();
+      ctx.beginPath();
+      ctx.moveTo(x - rx * 0.32, y + ry * 0.78);
+      ctx.lineTo(x, y + ry * 1.18);
+      ctx.lineTo(x + rx * 0.32, y + ry * 0.78);
+      ctx.closePath();
+      ctx.fill();
+
+      ctx.strokeStyle = `rgba(103, 110, 126, ${balloonAlpha * 0.55})`;
+      ctx.lineWidth = 0.55;
+      drawPath(ctx, [
+        { x: x - rx * 0.1, y: y + ry * 0.92 },
+        { x: x - rx * 0.05, y: y + ry * 1.46 }
+      ]);
+      ctx.stroke();
+      drawPath(ctx, [
+        { x: x + rx * 0.1, y: y + ry * 0.92 },
+        { x: x + rx * 0.05, y: y + ry * 1.46 }
+      ]);
+      ctx.stroke();
+
+      ctx.fillStyle = `rgba(98, 105, 118, ${balloonAlpha * 0.42})`;
+      ctx.fillRect(x - rx * 0.12, y + ry * 1.42, rx * 0.24, Math.max(1.3, rx * 0.12));
+
+      if (burnPhase > 0.001) {
+        const flameBaseY = y + ry * 1.18;
+        const burnerGlow = ctx.createRadialGradient(
+          x,
+          flameBaseY + ry * 0.2,
+          rx * 0.05,
+          x,
+          flameBaseY + ry * 0.24,
+          rx * 0.42
+        );
+        burnerGlow.addColorStop(0, `rgba(255, 238, 166, ${0.24 * burnPhase})`);
+        burnerGlow.addColorStop(0.45, `rgba(255, 178, 74, ${0.16 * burnPhase})`);
+        burnerGlow.addColorStop(1, "rgba(255, 178, 74, 0)");
+        ctx.fillStyle = burnerGlow;
+        ctx.beginPath();
+        ctx.ellipse(x, flameBaseY + ry * 0.18, rx * 0.44, ry * 0.32, 0, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 122, 54, ${0.28 * burnPhase})`;
+        ctx.beginPath();
+        ctx.moveTo(x - rx * 0.14, flameBaseY);
+        ctx.lineTo(x, flameBaseY + ry * 0.64);
+        ctx.lineTo(x + rx * 0.14, flameBaseY);
+        ctx.closePath();
+        ctx.fill();
+
+        ctx.fillStyle = `rgba(255, 236, 112, ${0.46 * burnPhase})`;
+        ctx.beginPath();
+        ctx.moveTo(x - rx * 0.08, flameBaseY + ry * 0.02);
+        ctx.lineTo(x, flameBaseY + ry * 0.42);
+        ctx.lineTo(x + rx * 0.08, flameBaseY + ry * 0.02);
+        ctx.closePath();
+        ctx.fill();
+      }
+    });
+
+    ctx.restore();
+  }
+
   function cellKey(cx, cy) {
     return `${cx},${cy}`;
   }
@@ -292,7 +531,15 @@
       startle: 0,
       waves: [],
       drawBoids: [],
-      frameCount: 0
+      frameCount: 0,
+      balloonPulse: {
+        active: false,
+        index: 0,
+        startedAt: 0,
+        durationMs: 0,
+        nextAt: performance.now() + rand(500, 1200),
+        progress: 0
+      }
     };
 
     function resize() {
@@ -381,6 +628,32 @@
           disturb();
         }
       });
+    }
+
+    function updateBalloonPulse(now) {
+      if (!CONFIG.balloonFestival) return;
+
+      const pulse = state.balloonPulse;
+      if (pulse.active) {
+        const elapsed = now - pulse.startedAt;
+        if (elapsed >= pulse.durationMs) {
+          pulse.active = false;
+          pulse.progress = 0;
+          pulse.nextAt =
+            now + rand(CONFIG.balloonBurnIntervalMinMs, CONFIG.balloonBurnIntervalMaxMs);
+        } else {
+          pulse.progress = clamp(elapsed / pulse.durationMs, 0, 1);
+        }
+        return;
+      }
+
+      if (now < pulse.nextAt) return;
+
+      pulse.active = true;
+      pulse.index = Math.floor(rand(0, BRISTOL_BALLOONS.length));
+      pulse.startedAt = now;
+      pulse.durationMs = rand(CONFIG.balloonBurnDurationMinMs, CONFIG.balloonBurnDurationMaxMs);
+      pulse.progress = 0;
     }
 
     function buildSpatialGrid(boids) {
@@ -607,6 +880,8 @@
     }
 
     function render() {
+      updateBalloonPulse(performance.now());
+
       ctx.clearRect(0, 0, state.width, state.height);
       drawPolygonBands(ctx, state.width, state.height);
 
@@ -615,6 +890,14 @@
       gradient.addColorStop(1, "rgba(204, 214, 229, 0.08)");
       ctx.fillStyle = gradient;
       ctx.fillRect(0, 0, state.width, state.height);
+
+      if (CONFIG.balloonFestival) {
+        drawBalloonFestival(ctx, state.width, state.height, state.balloonPulse);
+      }
+
+      if (CONFIG.cliftonBridge) {
+        drawCliftonBridge(ctx, state.width, state.height);
+      }
 
       let liveWaveCount = 0;
       for (let i = 0; i < state.waves.length; i += 1) {

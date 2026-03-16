@@ -23,4 +23,8 @@ format:
     css: []
     include-in-header:
       text: |
-        <script src="flock.js" defer></script>
+        <script
+          src="flock.js"
+          data-flags="balloonFestival=true"
+          defer
+        ></script>

@@ -16,6 +16,7 @@ This project gives you a complete working example with:
 - faint low-poly hills
 - a simulated murmuration of birds
 - slide-change disturbance waves
+- a pastel balloon-festival layer near the horizon
 - a ready-to-publish GitHub Pages output in `docs/`
 
 ## What Are Quarto And Reveal.js?
@@ -39,6 +40,24 @@ The Quarto Reveal.js guide explains that slides are usually created from Markdow
 - `theme.scss`: visual theme and Reveal.js styling
 - `flock.js`: the background simulation and rendering logic
 - `docs/`: rendered output for GitHub Pages
+
+## Optional Landmark Layers
+
+The background script supports a small flag system through the `flock.js` script tag in `_quarto.yml`.
+
+The default demo uses:
+
+```html
+<script src="flock.js" data-flags="balloonFestival=true" defer></script>
+```
+
+The available flags are:
+
+- `balloonFestival=true`: show the low, pastel hot-air balloons and their periodic burner glow
+- `cliftonBridge=true`: show the optional bridge silhouette in the hills
+- `bristol=true`: convenience flag that enables both Bristol-themed layers at once
+
+The standard published deck keeps the balloons on and leaves the bridge off.
 
 ## First-Time Setup
 
@@ -134,6 +153,29 @@ The most useful settings are:
 - `waveSpeed`, `waveWidth`, `waveStrength`: the slide-change disturbance
 - `minDrawSize`, `maxDrawSize`: depth-based bird size range
 - `flockTop*` and `flockBottom*`: the vertical flight envelope
+- `balloonBurnInterval*`, `balloonBurnDuration*`: the balloon burner timing when the festival layer is enabled
+
+If you want to turn landmark layers on or off, change the `data-flags` value in `_quarto.yml`, not the core flock code.
+
+Examples:
+
+```html
+<script src="flock.js" data-flags="balloonFestival=true" defer></script>
+```
+
+Default deck with balloons only.
+
+```html
+<script src="flock.js" data-flags="balloonFestival=true&cliftonBridge=true" defer></script>
+```
+
+Balloons plus the optional bridge.
+
+```html
+<script src="flock.js" data-flags="bristol=true" defer></script>
+```
+
+Convenience version that enables both Bristol-themed layers together.
 
 When in doubt:
 

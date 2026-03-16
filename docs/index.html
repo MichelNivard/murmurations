@@ -186,7 +186,7 @@
       margin-right: 0; 
     }
   </style>
-  <script src="flock.js" defer=""></script>
+  <script src="flock.js" data-flags="balloonFestival=true" defer=""></script>
 </head>
 <body class="quarto-light">
   <div class="reveal">
@@ -234,7 +234,21 @@ Michel Nivard
 <li>Three faint low-poly hill bands give the scene depth</li>
 <li>The flock is rendered as many small dark birds with perspective-based sizing</li>
 <li>Birds prefer the right side so they interfere with slide text less often</li>
+<li>The default deck also includes a faint balloon-festival layer near the horizon</li>
 </ul>
+</section>
+<section id="optional-landmark-layers" class="slide level2">
+<h2>Optional Landmark Layers</h2>
+<p>The background has a small flag system so you can turn landmark details on and off without editing the simulation code itself.</p>
+<p>In <code>_quarto.yml</code>, the demo deck loads <code>flock.js</code> like this:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource html number-lines code-with-copy"><code class="sourceCode html"><span id="cb1-1"><a href=""></a><span class="dt">&lt;</span><span class="kw">script</span><span class="ot"> src</span><span class="op">=</span><span class="st">"flock.js"</span><span class="ot"> data-flags</span><span class="op">=</span><span class="st">"balloonFestival=true"</span><span class="ot"> defer</span><span class="dt">&gt;&lt;/</span><span class="kw">script</span><span class="dt">&gt;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<p>Useful flags are:</p>
+<ul>
+<li><code>balloonFestival=true</code> enables the pastel balloons and burner glow pulses</li>
+<li><code>cliftonBridge=true</code> enables the optional bridge silhouette</li>
+<li><code>bristol=true</code> enables both Bristol-themed layers at once</li>
+</ul>
+<p>The published demo keeps the balloons on by default and leaves the bridge off.</p>
 </section>
 <section id="how-the-simulation-works" class="slide level2">
 <h2>How The Simulation Works</h2>
@@ -261,14 +275,15 @@ Michel Nivard
 <section id="the-main-tuning-file" class="slide level2">
 <h2>The Main Tuning File</h2>
 <p>Most behavior lives in <code>flock.js</code>.</p>
-<div class="sourceCode" id="cb1"><pre class="sourceCode numberSource js number-lines code-with-copy"><code class="sourceCode javascript"><span id="cb1-1"><a href=""></a><span class="kw">const</span> CONFIG <span class="op">=</span> {</span>
-<span id="cb1-2"><a href=""></a>  <span class="dt">boidCount</span><span class="op">:</span> <span class="dv">750</span><span class="op">,</span></span>
-<span id="cb1-3"><a href=""></a>  <span class="dt">topologicalNeighbors</span><span class="op">:</span> <span class="dv">9</span><span class="op">,</span></span>
-<span id="cb1-4"><a href=""></a>  <span class="dt">separationRadius</span><span class="op">:</span> <span class="dv">18</span><span class="op">,</span></span>
-<span id="cb1-5"><a href=""></a>  <span class="dt">rightAffinityStrength</span><span class="op">:</span> <span class="fl">0.11</span><span class="op">,</span></span>
-<span id="cb1-6"><a href=""></a>  <span class="dt">waveSpeed</span><span class="op">:</span> <span class="dv">13</span><span class="op">,</span></span>
-<span id="cb1-7"><a href=""></a>  <span class="dt">waveWidth</span><span class="op">:</span> <span class="dv">95</span></span>
-<span id="cb1-8"><a href=""></a>}<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<div class="sourceCode" id="cb2"><pre class="sourceCode numberSource js number-lines code-with-copy"><code class="sourceCode javascript"><span id="cb2-1"><a href=""></a><span class="kw">const</span> CONFIG <span class="op">=</span> {</span>
+<span id="cb2-2"><a href=""></a>  <span class="dt">boidCount</span><span class="op">:</span> <span class="dv">500</span><span class="op">,</span></span>
+<span id="cb2-3"><a href=""></a>  <span class="dt">topologicalNeighbors</span><span class="op">:</span> <span class="dv">18</span><span class="op">,</span></span>
+<span id="cb2-4"><a href=""></a>  <span class="dt">separationRadius</span><span class="op">:</span> <span class="dv">21</span><span class="op">,</span></span>
+<span id="cb2-5"><a href=""></a>  <span class="dt">rightAffinityStrength</span><span class="op">:</span> <span class="fl">0.11</span><span class="op">,</span></span>
+<span id="cb2-6"><a href=""></a>  <span class="dt">waveSpeed</span><span class="op">:</span> <span class="dv">13</span><span class="op">,</span></span>
+<span id="cb2-7"><a href=""></a>  <span class="dt">waveWidth</span><span class="op">:</span> <span class="dv">95</span><span class="op">,</span></span>
+<span id="cb2-8"><a href=""></a>  <span class="dt">balloonBurnIntervalMinMs</span><span class="op">:</span> <span class="dv">1800</span></span>
+<span id="cb2-9"><a href=""></a>}<span class="op">;</span></span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 <p>If you want to change the feel of the simulation, this is the first file to edit.</p>
 </section>
 <section id="what-to-tweak" class="slide level2">
@@ -281,6 +296,7 @@ Michel Nivard
 <li><code>rightAffinityStrength</code>: how strongly the flock prefers the right side</li>
 <li><code>waveSpeed</code>, <code>waveWidth</code>, <code>waveStrength</code>: how slide-change disturbances propagate</li>
 <li><code>minDrawSize</code>, <code>maxDrawSize</code>: how strongly depth affects bird size</li>
+<li><code>balloonBurnInterval*</code>, <code>balloonBurnDuration*</code>: how often balloon burners fire and how long they glow</li>
 </ul>
 <p>Use <code>theme.scss</code> when you want to change color, typography, spacing, or the overall atmosphere rather than the flock mechanics.</p>
 </section>

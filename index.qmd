@@ -37,6 +37,27 @@ The background is intentionally atmospheric rather than literal.
 - Three faint low-poly hill bands give the scene depth
 - The flock is rendered as many small dark birds with perspective-based sizing
 - Birds prefer the right side so they interfere with slide text less often
+- The default deck also includes a faint balloon-festival layer near the horizon
+
+---
+
+## Optional Landmark Layers
+
+The background has a small flag system so you can turn landmark details on and off without editing the simulation code itself.
+
+In `_quarto.yml`, the demo deck loads `flock.js` like this:
+
+```html
+<script src="flock.js" data-flags="balloonFestival=true" defer></script>
+```
+
+Useful flags are:
+
+- `balloonFestival=true` enables the pastel balloons and burner glow pulses
+- `cliftonBridge=true` enables the optional bridge silhouette
+- `bristol=true` enables both Bristol-themed layers at once
+
+The published demo keeps the balloons on by default and leaves the bridge off.
 
 ---
 
@@ -71,12 +92,13 @@ Most behavior lives in `flock.js`.
 
 ```js
 const CONFIG = {
-  boidCount: 750,
-  topologicalNeighbors: 9,
-  separationRadius: 18,
+  boidCount: 500,
+  topologicalNeighbors: 18,
+  separationRadius: 21,
   rightAffinityStrength: 0.11,
   waveSpeed: 13,
-  waveWidth: 95
+  waveWidth: 95,
+  balloonBurnIntervalMinMs: 1800
 };
 ```
 
@@ -94,6 +116,7 @@ The easiest controls for experimentation are:
 - `rightAffinityStrength`: how strongly the flock prefers the right side
 - `waveSpeed`, `waveWidth`, `waveStrength`: how slide-change disturbances propagate
 - `minDrawSize`, `maxDrawSize`: how strongly depth affects bird size
+- `balloonBurnInterval*`, `balloonBurnDuration*`: how often balloon burners fire and how long they glow
 
 Use `theme.scss` when you want to change color, typography, spacing, or the overall atmosphere rather than the flock mechanics.
 
