@@ -1,5 +1,7 @@
 # Murmurations
 
+Live demo: <https://michelnivard.github.io/murmurations/>
+
 `murmurations` is a Quarto presentation template that uses the `revealjs` format and adds a custom animated background flock.
 
 If you are new to Quarto, the short version is:
